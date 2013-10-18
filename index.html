@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+    <title>Game of Life</title>
+    <meta charset="utf-8">
+    <meta name="description" content="Conway's Game of Life!">
+	<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+	<script src="gameoflife.js"></script>
+</head>
+
+<body>
+
+    <canvas id="golCanvas" width="500" height="500" style="border:1px solid blue">
+            <p>Your browser doesn't support canvas.</p>
+    </canvas>
+	
+	<p>When the game is paused via STOP GAME, click in the canvas to kill or create cells. Select START GAME to resume!</p>
+	<p id="genText"></p>
+	<p id="liveText"></p>
+	
+	<input type="button" id="startButton" value="START GAME"/>
+	<input type="button" id="stopButton" value="STOP GAME"/>
+	<input type="button" id="clearButton" value="CLEAR GAME"/>
+</body>
+
+</html>
