@@ -21,36 +21,23 @@
 
 var GOLJS = { };
 
-//500 x 500 pixel canvas
-//50 x 50 board (10x10 block to represent a cell)
-function initBoard () {
-	var canvas = document.getElementById("golCanvas");
-	var canvasWidth = canvas.width;
-	var canvasHeight = canvas.height;
-	GOLJS.canvas = canvas;
-	GOLJS.canvasContext = canvas.getContext("2d");
-	
-	function Cell(liveneighbors, alive) {
-		this.liveneighbors = liveneighbors;
-		this.alive = alive;
-	}
-	
-	function createBoard () {
-		var board = new Array(50);
-		for (var columns = 0; columns < 50; columns++) {
-			board[columns] = new Array(50);
-			for (var rows = 0; rows < 50; rows++) {
-				// generate a number between 0 and 10 inclusive
-				var alive = ((Math.floor(Math.random()*11)%2)===0)? true : false;
-				board[columns][rows] = new Cell(0, alive);
-			}
+function Cell(liveneighbors, alive) {
+	this.liveneighbors = liveneighbors;
+	this.alive = alive;
+}
+
+function createBoard () {
+	var board = [];
+	for (var columns = 0; columns < 50; columns++) {
+		board[columns] = [];
+		for (var rows = 0; rows < 50; rows++) {
+			// generate a number between 0 and 10 inclusive
+			var alive = ((Math.floor(Math.random()*11)%2)===0)? true : false;
+			board[columns][rows] = new Cell(0, alive);
 		}
-		return board;
-	}	
-	
-	GOLJS.board = createBoard();
-	GOLJS.gameover = true;
-};
+	}
+	return board;
+}	
 
 function clearDisplayBoard (canvas) {
 	//Reset width to clear board
@@ -63,12 +50,13 @@ function drawCell (x, y, context, style) {
 	context.fillRect(x*10, y*10, 10, 10);
 };
 
-function playGame() {
+function playGame(gameBoard, gameCanvas) {
 	var columns = 50;
 	var rows = 50;
-	var board = GOLJS.board;
-	var context = GOLJS.canvasContext;
-	
+	var board = gameBoard;
+	var context = gameCanvas;
+	var liveCount = 0;
+		
 	/* Count liveneighbors */
     for (var x = 0; x < columns; x++) {
 		for (var y = 0; y < rows; y++) {
@@ -90,6 +78,7 @@ function playGame() {
         }
     }
 
+	//var rgb = Math.floor(Math.random()*250*250*250);
     /* Spawn, keep, or kill the cells -- then display */
     for (var x = 0; x < columns; x++) {
 		for (var y = 0; y < rows; y++) {
@@ -106,18 +95,46 @@ function playGame() {
 				var rgb = Math.floor(Math.random()*250*250*250);
 				var style =	rgb.toString(16);
 				drawCell(x, y, context, style);
+				liveCount += 1;
 			}
         }
     }
-};
 	
+	return liveCount;
+};
+
+//500 x 500 pixel canvas
+//50 x 50 board (10x10 block to represent a cell)
+function initBoard () {
+	var canvas = document.getElementById("golCanvas");
+	var canvasWidth = canvas.width;
+	var canvasHeight = canvas.height;
+	
+	var genText = document.getElementById("genText");
+	var liveText = document.getElementById("liveText");
+	
+	GOLJS.canvas = canvas;
+	GOLJS.canvasContext = canvas.getContext("2d");	
+	GOLJS.board = createBoard();
+	GOLJS.gameover = true;
+	GOLJS.generation = 0;
+	GOLJS.genText = genText;
+	GOLJS.liveText = liveText;
+	
+	GOLJS.genText.innerHTML = "Generation: 0";
+	GOLJS.liveText.innerHTML = "Cells alive: 0";
+};
+
 $(function () {
 	initBoard();
 	
 	function gameTick() {
 		if (GOLJS.gameover !== true){
 			clearDisplayBoard(GOLJS.canvas);
-			playGame();
+			var liveCount = playGame(GOLJS.board, GOLJS.canvasContext);
+			GOLJS.generation += 1;
+			GOLJS.genText.innerHTML = "Generation: " + GOLJS.generation;
+			GOLJS.liveText.innerHTML = "Cells alive: " + liveCount;
 		}
 	};
 	
@@ -131,7 +148,7 @@ $(function () {
 	};
 
 	$('#golCanvas').bind ("mousedown", function (e) {
-		if (GOLJS.gameover === true) {
+		if (GOLJS.paused === true) {
 			var x = e.offsetX;
 			var y = e.offsetY;
 
@@ -152,10 +169,15 @@ $(function () {
 			GOLJS.clearInterval();
 			GOLJS.setInterval(100);
 		}
+		else if (GOLJS.paused === true) {
+			GOLJS.paused = false;
+			GOLJS.clearInterval();
+			GOLJS.setInterval(100);
+		}
 	});
 	
 	$("#stopButton").click(function () {
-		GOLJS.gameover = true;
+		GOLJS.paused = true;
 		GOLJS.clearInterval();
 	});
 	
